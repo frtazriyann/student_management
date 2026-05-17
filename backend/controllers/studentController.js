@@ -1,4 +1,5 @@
 const Student = require('../models/Student');
+const Subject = require('../models/Subject');
 const generateToken = require('../utils/generateToken');
 
 exports.getStudents = async (req, res) => {
@@ -37,11 +38,26 @@ exports.getStudent = async (req, res) => {
 
 exports.createStudent = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, subjectNames } = req.body;
     const exists = await Student.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Student with this email already exists' });
+    if (subjectNames && Array.isArray(subjectNames) && subjectNames.length > 0) {
+      const subjectIds = [];
+      for (const name of subjectNames) {
+        const trimmed = name.trim();
+        if (!trimmed) continue;
+        let subject = await Subject.findOne({ name: { $regex: new RegExp(`^${trimmed}$`, 'i') } });
+        if (!subject) {
+          subject = await Subject.create({ name: trimmed });
+        }
+        subjectIds.push(subject._id);
+      }
+      req.body.subjects = subjectIds;
+    }
+    delete req.body.subjectNames;
     const student = await Student.create(req.body);
-    res.status(201).json(student);
+    const populated = await student.populate('subjects', 'name code');
+    res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -56,6 +72,20 @@ exports.updateStudent = async (req, res) => {
       delete req.body.password;
       await student.save();
     }
+    if (req.body.subjectNames && Array.isArray(req.body.subjectNames)) {
+      const subjectIds = [];
+      for (const name of req.body.subjectNames) {
+        const trimmed = name.trim();
+        if (!trimmed) continue;
+        let subj = await Subject.findOne({ name: { $regex: new RegExp(`^${trimmed}$`, 'i') } });
+        if (!subj) {
+          subj = await Subject.create({ name: trimmed });
+        }
+        subjectIds.push(subj._id);
+      }
+      req.body.subjects = subjectIds;
+    }
+    delete req.body.subjectNames;
     const updated = await Student.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,

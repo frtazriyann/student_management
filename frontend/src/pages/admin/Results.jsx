@@ -9,11 +9,10 @@ import Pagination from '../../components/ui/Pagination';
 export default function Results() {
   const [results, setResults] = useState([]);
   const [students, setStudents] = useState([]);
-  const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ student: '', exam: '', marksObtained: '', remarks: '' });
+  const [form, setForm] = useState({ student: '', examName: '', subjectName: '', totalMarks: 100, marksObtained: '', remarks: '' });
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
 
@@ -32,12 +31,8 @@ export default function Results() {
 
   useEffect(() => { fetchResults(); }, [fetchResults]);
   useEffect(() => {
-    Promise.all([
-      api.get('/students?limit=200'),
-      api.get('/exams?limit=200'),
-    ]).then(([{ data: s }, { data: e }]) => {
+    api.get('/students?limit=200').then(({ data: s }) => {
       setStudents(s.students);
-      setExams(e.exams);
     }).catch(() => {});
   }, []);
 
@@ -72,7 +67,7 @@ export default function Results() {
 
   const openEdit = (r) => {
     setEditing(r);
-    setForm({ student: r.student?._id || '', exam: r.exam?._id || '', marksObtained: r.marksObtained, remarks: r.remarks || '' });
+    setForm({ student: r.student?._id || '', examName: r.exam?.name || '', subjectName: r.exam?.subject?.name || '', totalMarks: r.exam?.totalMarks || 100, marksObtained: r.marksObtained, remarks: r.remarks || '', exam: r.exam?._id || '' });
     setShowModal(true);
   };
 
@@ -101,7 +96,7 @@ export default function Results() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button onClick={() => { setEditing(null); setForm({ student: '', exam: '', marksObtained: '', remarks: '' }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+        <button onClick={() => { setEditing(null); setForm({ student: '', examName: '', subjectName: '', totalMarks: 100, marksObtained: '', remarks: '' }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
           <FiPlus size={18} /> Add Result
         </button>
       </div>
@@ -120,16 +115,25 @@ export default function Results() {
               {students.map((s) => <option key={s._id} value={s._id}>{s.name} ({s.batch})</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Exam *</label>
-            <select value={form.exam} onChange={(e) => setForm({ ...form, exam: e.target.value })} className="input-field" required disabled={!!editing}>
-              <option value="">Select Exam</option>
-              {exams.map((ex) => <option key={ex._id} value={ex._id}>{ex.name} - {ex.subject?.name} (Total: {ex.totalMarks})</option>)}
-            </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Exam Name *</label>
+              <input type="text" value={form.examName} onChange={(e) => setForm({ ...form, examName: e.target.value })} className="input-field" placeholder="e.g. Midterm, Final, Quiz 1" required disabled={!!editing} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject *</label>
+              <input type="text" value={form.subjectName} onChange={(e) => setForm({ ...form, subjectName: e.target.value })} className="input-field" placeholder="e.g. Mathematics, Physics" required disabled={!!editing} />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Marks Obtained *</label>
-            <input type="number" value={form.marksObtained} onChange={(e) => setForm({ ...form, marksObtained: e.target.value })} className="input-field" required min="0" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Marks *</label>
+              <input type="number" value={form.totalMarks} onChange={(e) => setForm({ ...form, totalMarks: e.target.value })} className="input-field" required min="1" disabled={!!editing} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Marks Obtained *</label>
+              <input type="number" value={form.marksObtained} onChange={(e) => setForm({ ...form, marksObtained: e.target.value })} className="input-field" required min="0" />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Remarks</label>

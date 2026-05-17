@@ -8,11 +8,10 @@ import Pagination from '../../components/ui/Pagination';
 
 export default function Exams() {
   const [exams, setExams] = useState([]);
-  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', subject: '', batch: '', date: '', totalMarks: 100, passingMarks: 40, description: '' });
+  const [form, setForm] = useState({ name: '', subjectName: '', batch: '', date: '', totalMarks: 100, passingMarks: 40, description: '' });
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
 
@@ -30,12 +29,12 @@ export default function Exams() {
   }, [page]);
 
   useEffect(() => { fetchExams(); }, [fetchExams]);
-  useEffect(() => { api.get('/subjects').then(({ data }) => setSubjects(data)).catch(() => {}); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const payload = { ...form, totalMarks: Number(form.totalMarks), passingMarks: Number(form.passingMarks) };
+      delete payload.subject;
       if (editing) {
         await api.put(`/exams/${editing._id}`, payload);
         toast.success('Exam updated');
@@ -63,7 +62,7 @@ export default function Exams() {
 
   const openEdit = (ex) => {
     setEditing(ex);
-    setForm({ name: ex.name, subject: ex.subject?._id || '', batch: ex.batch || '', date: ex.date?.substring(0, 10) || '', totalMarks: ex.totalMarks, passingMarks: ex.passingMarks, description: ex.description || '' });
+    setForm({ name: ex.name, subjectName: ex.subject?.name || '', batch: ex.batch || '', date: ex.date?.substring(0, 10) || '', totalMarks: ex.totalMarks, passingMarks: ex.passingMarks, description: ex.description || '' });
     setShowModal(true);
   };
 
@@ -84,7 +83,7 @@ export default function Exams() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button onClick={() => { setEditing(null); setForm({ name: '', subject: '', batch: '', date: '', totalMarks: 100, passingMarks: 40, description: '' }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+        <button onClick={() => { setEditing(null); setForm({ name: '', subjectName: '', batch: '', date: '', totalMarks: 100, passingMarks: 40, description: '' }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
           <FiPlus size={18} /> Create Exam
         </button>
       </div>
@@ -103,10 +102,7 @@ export default function Exams() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject *</label>
-              <select value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className="input-field" required>
-                <option value="">Select Subject</option>
-                {subjects.map((s) => <option key={s._id} value={s._id}>{s.name}</option>)}
-              </select>
+              <input type="text" value={form.subjectName} onChange={(e) => setForm({ ...form, subjectName: e.target.value })} className="input-field" placeholder="e.g. Mathematics" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Batch</label>

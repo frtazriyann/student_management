@@ -1,5 +1,6 @@
 const Exam = require('../models/Exam');
 const Result = require('../models/Result');
+const Subject = require('../models/Subject');
 
 exports.getExams = async (req, res) => {
   try {
@@ -21,6 +22,15 @@ exports.getExams = async (req, res) => {
 
 exports.createExam = async (req, res) => {
   try {
+    if (req.body.subjectName && !req.body.subject) {
+      const trimmed = req.body.subjectName.trim();
+      let subject = await Subject.findOne({ name: { $regex: new RegExp(`^${trimmed}$`, 'i') } });
+      if (!subject) {
+        subject = await Subject.create({ name: trimmed });
+      }
+      req.body.subject = subject._id;
+    }
+    delete req.body.subjectName;
     const exam = await Exam.create(req.body);
     const populated = await exam.populate('subject', 'name code');
     res.status(201).json(populated);

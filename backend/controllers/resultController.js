@@ -1,5 +1,6 @@
 const Result = require('../models/Result');
 const Exam = require('../models/Exam');
+const Subject = require('../models/Subject');
 const { analyzePerformance } = require('../utils/analytics');
 
 exports.getResults = async (req, res) => {
@@ -23,7 +24,24 @@ exports.getResults = async (req, res) => {
 
 exports.createResult = async (req, res) => {
   try {
-    const { student, exam: examId, marksObtained } = req.body;
+    const { student, marksObtained, examName, subjectName, totalMarks: totalMarksInput } = req.body;
+    let examId = req.body.exam;
+    if (examName && subjectName && totalMarksInput && !examId) {
+      const trimmedSubject = subjectName.trim();
+      let subject = await Subject.findOne({ name: { $regex: new RegExp(`^${trimmedSubject}$`, 'i') } });
+      if (!subject) {
+        subject = await Subject.create({ name: trimmedSubject });
+      }
+      let examDoc = await Exam.findOne({ name: examName.trim(), subject: subject._id });
+      if (!examDoc) {
+        examDoc = await Exam.create({ name: examName.trim(), subject: subject._id, totalMarks: Number(totalMarksInput), date: new Date() });
+      }
+      examId = examDoc._id;
+      req.body.exam = examId;
+    }
+    delete req.body.examName;
+    delete req.body.subjectName;
+    delete req.body.totalMarks;
     const exists = await Result.findOne({ student, exam: examId });
     if (exists) return res.status(400).json({ message: 'Result already exists for this student and exam' });
     const exam = await Exam.findById(examId);

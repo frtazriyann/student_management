@@ -8,12 +8,11 @@ import Pagination from '../../components/ui/Pagination';
 
 const emptyForm = {
   name: '', email: '', password: '', phone: '', guardianPhone: '',
-  batch: '', address: '', monthlyFee: '', subjects: [], admissionDate: '',
+  batch: '', address: '', monthlyFee: '', subjectNames: '', admissionDate: '',
 };
 
 export default function Students() {
   const [students, setStudents] = useState([]);
-  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -39,9 +38,6 @@ export default function Students() {
     fetchStudents();
   }, [fetchStudents]);
 
-  useEffect(() => {
-    api.get('/subjects').then(({ data }) => setSubjects(data)).catch(() => {});
-  }, []);
 
   const openCreate = () => {
     setEditing(null);
@@ -55,7 +51,7 @@ export default function Students() {
       name: student.name, email: student.email, password: '', phone: student.phone,
       guardianPhone: student.guardianPhone || '', batch: student.batch,
       address: student.address || '', monthlyFee: student.monthlyFee,
-      subjects: student.subjects?.map((s) => s._id) || [],
+      subjectNames: student.subjects?.map((s) => s.name).join(', ') || '',
       admissionDate: student.admissionDate ? student.admissionDate.substring(0, 10) : '',
     });
     setShowModal(true);
@@ -64,8 +60,12 @@ export default function Students() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const payload = { ...form, monthlyFee: Number(form.monthlyFee) };
-      if (!payload.password) delete payload.password;
+        const payload = {
+          ...form,
+          monthlyFee: Number(form.monthlyFee),
+          subjectNames: form.subjectNames ? form.subjectNames.split(',').map((s) => s.trim()).filter(Boolean) : [],
+        };
+        if (!payload.password) delete payload.password;
       if (editing) {
         await api.put(`/students/${editing._id}`, payload);
         toast.success('Student updated');
@@ -177,23 +177,8 @@ export default function Students() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subjects</label>
-            <div className="flex flex-wrap gap-2">
-              {subjects.map((s) => (
-                <label key={s._id} className="flex items-center gap-1.5 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={form.subjects.includes(s._id)}
-                    onChange={(e) => {
-                      const subs = e.target.checked ? [...form.subjects, s._id] : form.subjects.filter((id) => id !== s._id);
-                      setForm({ ...form, subjects: subs });
-                    }}
-                    className="rounded border-gray-300"
-                  />
-                  {s.name}
-                </label>
-              ))}
-            </div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subjects (comma-separated)</label>
+            <input type="text" value={form.subjectNames} onChange={(e) => setForm({ ...form, subjectNames: e.target.value })} className="input-field" placeholder="e.g. Mathematics, Physics, Chemistry" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
