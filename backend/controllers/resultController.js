@@ -50,10 +50,10 @@ exports.createResult = async (req, res) => {
     let grade = 'F';
     if (percentage >= 80) grade = 'A+';
     else if (percentage >= 70) grade = 'A';
-    else if (percentage >= 60) grade = '';
-    else if (percentage >= 60) grade = 'B';
-    else if (percentage >= 50) grade = 'C';
-    else if (percentage >= 40) grade = 'D';
+    else if (percentage >= 60) grade = 'A-';
+    else if (percentage >= 50) grade = 'B';
+    else if (percentage >= 40) grade = 'C';
+    else if (percentage >= 33) grade = 'D';
     const result = await Result.create({
       ...req.body,
       percentage: Math.round(percentage * 100) / 100,
