@@ -79,7 +79,7 @@ exports.updateResult = async (req, res) => {
       let grade = 'F';
       if (percentage >= 80) grade = 'A+';
       else if (percentage >= 70) grade = 'A';
-      else if (percentage >= 60) grade = 'B+';
+      else if (percentage >= 60) grade = 'A-';
       else if (percentage >= 50) grade = 'B';
       else if (percentage >= 40) grade = 'C';
       else if (percentage >= 33) grade = 'D';
