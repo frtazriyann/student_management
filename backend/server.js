@@ -11,6 +11,7 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
+require('./config/cloudinary');
 
 // ❗ Connect DB AFTER env loads
 connectDB();

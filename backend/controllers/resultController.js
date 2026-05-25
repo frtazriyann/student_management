@@ -48,9 +48,9 @@ exports.createResult = async (req, res) => {
     if (!exam) return res.status(404).json({ message: 'Exam not found' });
     const percentage = (marksObtained / exam.totalMarks) * 100;
     let grade = 'F';
-    if (percentage >= 90) grade = 'A+';
-    else if (percentage >= 80) grade = 'A';
-    else if (percentage >= 70) grade = 'B+';
+    if (percentage >= 80) grade = 'A+';
+    else if (percentage >= 70) grade = 'A';
+    else if (percentage >= 60) grade = '';
     else if (percentage >= 60) grade = 'B';
     else if (percentage >= 50) grade = 'C';
     else if (percentage >= 40) grade = 'D';
@@ -77,12 +77,12 @@ exports.updateResult = async (req, res) => {
       const exam = await Exam.findById(result.exam);
       const percentage = (req.body.marksObtained / exam.totalMarks) * 100;
       let grade = 'F';
-      if (percentage >= 90) grade = 'A+';
-      else if (percentage >= 80) grade = 'A';
-      else if (percentage >= 70) grade = 'B+';
-      else if (percentage >= 60) grade = 'B';
-      else if (percentage >= 50) grade = 'C';
-      else if (percentage >= 40) grade = 'D';
+      if (percentage >= 80) grade = 'A+';
+      else if (percentage >= 70) grade = 'A';
+      else if (percentage >= 60) grade = 'B+';
+      else if (percentage >= 50) grade = 'B';
+      else if (percentage >= 40) grade = 'C';
+      else if (percentage >= 33) grade = 'D';
       req.body.percentage = Math.round(percentage * 100) / 100;
       req.body.grade = grade;
     }
